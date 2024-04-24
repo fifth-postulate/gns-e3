@@ -254,7 +254,7 @@ Error message and password prompt
 {"created":"20240421133239434","text":"\\define playerInfo()\n\u003Cstrong>Player:\u003C/strong> \u003C$link to{{!!player}}>{{!!player}}\u003C/$link>\n\\end","tags":"$:/tags/Macro","title":"$:/dvberkel/macro/playerInfo","modified":"20240424121147284"},
 {"created":"20240424120839441","text":"\\define playersInfo()\nPlayers:\u003C$list filter=\"[enlist{!!players}sort[]]\"> \u003C$link />\u003C/$list>\n\\end","tags":"$:/tags/Macro","title":"$:/dvberkel/macro/playersInfo","modified":"20240424121805309"},
 {"created":"20240421132656752","text":"\u003C$list filter=[all[current]tag[Character]]>\n  \u003C$macrocall $name=\"playerInfo\">\n\u003C/$list>","tags":"$:/tags/ViewTemplate","title":"$:/dvberkel/viewTemplate/playerInfo","modified":"20240421133526195"},
-{"created":"20240424120753914","text":"\u003C$list filter=[all[current]tag[Session]]>\n  Hello\n  \u003C$macrocall $name=\"playersInfo\"> \u003C$macrocall $name=\"locationInfo\">\n\u003C/$list>","tags":"$:/tags/ViewTemplate","title":"$:/dvberkel/viewTemplate/sessionDetails","modified":"20240424122901671"},
+{"created":"20240424120753914","text":"\u003C$list filter=[all[current]tag[Session]]>\n  \u003C$macrocall $name=\"playersInfo\"> This works \u003C$macrocall $name=\"locationInfo\">\n\u003C/$list>","tags":"$:/tags/ViewTemplate","title":"$:/dvberkel/viewTemplate/sessionDetails","modified":"20240424122919171"},
 {"created":"20240420143220976","title":"$:/GitHub/Filename","text":"index.html","modified":"20240420143222419"},
 {"created":"20240420143216606","title":"$:/GitHub/Path","text":"/docs/","modified":"20240420143217526"},
 {"created":"20240420143159519","title":"$:/GitHub/Repo","text":"fifth-postulate/gns-e3","modified":"20240420143212517"},
