@@ -20,7 +20,8 @@ main =
 
 
 type alias Model =
-    Gauge
+    { gauge : Gauge
+    }
 
 
 type Msg
@@ -33,7 +34,7 @@ init _ _ _ =
         gauge =
             Gauge.create 30 70
     in
-    ( gauge, Cmd.none )
+    ( { gauge = gauge }, Cmd.none )
 
 
 view : Model -> Document Msg
@@ -42,7 +43,7 @@ view model =
     , body =
         [ Html.div
             []
-            [ Gauge.view model
+            [ Gauge.view model.gauge
             ]
         ]
     }
@@ -54,7 +55,7 @@ update _ model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
