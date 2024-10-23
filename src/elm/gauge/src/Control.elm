@@ -9,7 +9,7 @@ import Html.Events.Extra.Touch as Touch
 import Task
 import Time exposing (Posix, every, now, posixToMillis)
 import Url exposing (Url)
-import Url.Parser as Parser exposing (Parser)
+import Url.Parser as Parser exposing ((</>), (<?>), Parser, s)
 import Url.Parser.Query as Query
 
 
@@ -79,9 +79,17 @@ statsParser =
             attribute
                 |> Query.int
                 |> Query.map (Maybe.withDefault 10)
+
+        queryParser : Query.Parser Stats
+        queryParser =
+            Query.map4 Stats (stat "ST") (stat "DX") (stat "IQ") (stat "HT")
     in
-    Query.map4 Stats (stat "ST") (stat "DX") (stat "IQ") (stat "HT")
-        |> Parser.query
+    s "gns-e3"
+        </> s "gauge"
+        </> Parser.oneOf
+                [ Parser.top <?> queryParser
+                , s "index.html" <?> queryParser
+                ]
 
 
 type alias Stats =
