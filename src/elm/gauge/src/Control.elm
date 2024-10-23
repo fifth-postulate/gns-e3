@@ -6,7 +6,8 @@ import Control.Gauge as Gauge exposing (Gauge)
 import Html exposing (Html)
 import Html.Events as Event
 import Html.Events.Extra.Touch as Touch
-import Time exposing (every)
+import Task
+import Time exposing (Posix, every, now, posixToMillis)
 import Url exposing (Url)
 import Url.Parser as Parser exposing (Parser)
 import Url.Parser.Query as Query
@@ -24,17 +25,25 @@ main =
         }
 
 
-type alias Model =
+type Model
+    = Playing Data
+    | Finished Int
+
+
+type alias Data =
     { gauge : Gauge
     , force : Float
     , strength : Float
     , grace : Int
     , heat : Int
+    , start : Maybe Posix
     }
 
 
 type Msg
     = None
+    | Tick Posix
+    | Tock Posix
     | Push
     | Pull
 
@@ -50,13 +59,15 @@ init _ uri _ =
         gauge =
             Gauge.create (2 * stats.ht) (3 * stats.iq)
     in
-    ( { gauge = gauge
-      , force = 2
-      , strength = toFloat stats.st
-      , heat = 0
-      , grace = stats.dx
-      }
-    , Cmd.none
+    ( Playing
+        { gauge = gauge
+        , force = 2
+        , strength = toFloat stats.st
+        , heat = 0
+        , grace = stats.dx
+        , start = Nothing
+        }
+    , Task.perform Tick now
     )
 
 
@@ -92,48 +103,94 @@ defaultStats =
 
 view : Model -> Document Msg
 view model =
+    let
+        html =
+            case model of
+                Playing m ->
+                    Html.div
+                        [ Event.onMouseDown Pull, Touch.onStart (always Pull) ]
+                        [ Gauge.view m.gauge
+                        ]
+
+                Finished t ->
+                    Html.h1 [] [ Html.text (String.fromInt t) ]
+    in
     { title = "Gauge Control"
     , body =
-        [ Html.div
-            [ Event.onMouseDown Pull, Touch.onStart (always Pull) ]
-            [ Gauge.view model.gauge
-            ]
+        [ html
         ]
     }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        None ->
-            ( model, Cmd.none )
-
-        Push ->
-            ( { model
-                | gauge = Gauge.update (awayBy model.force) model.gauge
-              }
-            , Cmd.none
-            )
-
-        Pull ->
+update msg mdl =
+    case mdl of
+        Playing model ->
             let
-                ( nextHeat, nextForce ) =
-                    if model.heat >= model.grace then
-                        ( 0, model.force + 1 )
+                command : Data -> Cmd Msg
+                command data =
+                    if Gauge.isCritical data.gauge then
+                        Task.perform Tock now
 
                     else
-                        ( model.heat + 1, model.force )
-
-                next =
-                    { model
-                        | gauge = Gauge.update (awayBy -model.strength) model.gauge
-                        , heat = nextHeat
-                        , force = nextForce
-                    }
+                        Cmd.none
             in
-            ( next
-            , Cmd.none
-            )
+            case msg of
+                None ->
+                    ( mdl, Cmd.none )
+
+                Tick t ->
+                    ( Playing { model | start = Just t }, Cmd.none )
+
+                Tock t ->
+                    let
+                        millis =
+                            posixToMillis t
+
+                        duration =
+                            model.start
+                                |> Maybe.map posixToMillis
+                                |> Maybe.map (\s -> millis - s)
+                                |> Maybe.withDefault 0
+                    in
+                    ( Finished duration, Cmd.none )
+
+                Push ->
+                    let
+                        next =
+                            { model
+                                | gauge = Gauge.update (awayBy model.force) model.gauge
+                            }
+                    in
+                    ( Playing next, command next )
+
+                Pull ->
+                    let
+                        ( nextHeat, nextForce ) =
+                            if model.heat >= model.grace then
+                                ( 0, model.force + 1 )
+
+                            else
+                                ( model.heat + 1, model.force )
+
+                        next =
+                            { model
+                                | gauge = Gauge.update (awayBy -model.strength) model.gauge
+                                , heat = nextHeat
+                                , force = nextForce
+                            }
+
+                        cmd =
+                            if Gauge.isCritical next.gauge then
+                                Task.perform Tock now
+
+                            else
+                                Cmd.none
+                    in
+                    ( Playing next, command next )
+
+        Finished _ ->
+            ( mdl, Cmd.none )
 
 
 awayBy : Float -> Float -> Float

@@ -1,4 +1,4 @@
-module Control.Gauge exposing (Gauge, create, update, view)
+module Control.Gauge exposing (Gauge, create, isCritical, update, view)
 
 import Svg exposing (Svg)
 import Svg.Attributes as Attribute
@@ -20,6 +20,13 @@ create safe maximum =
         , safe = toFloat safe
         , maximum = toFloat maximum
         }
+
+
+isCritical : Gauge -> Bool
+isCritical gauge =
+    case gauge of
+        Gauge { current, maximum } ->
+            abs current >= maximum
 
 
 radius : Float
