@@ -31,7 +31,7 @@ update : (Float -> Float) -> Gauge -> Gauge
 update f gauge =
     case gauge of
         Gauge g ->
-            Gauge { g | current = f g.current }
+            Gauge { g | current = clamp -90 90 (f g.current) }
 
 
 view : Gauge -> Svg msg
