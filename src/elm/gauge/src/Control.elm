@@ -28,6 +28,8 @@ type alias Model =
     { gauge : Gauge
     , force : Float
     , strength : Float
+    , grace : Int
+    , heat : Int
     }
 
 
@@ -51,6 +53,8 @@ init _ uri _ =
     ( { gauge = gauge
       , force = 2
       , strength = toFloat stats.st
+      , heat = 0
+      , grace = stats.dx
       }
     , Cmd.none
     )
@@ -69,20 +73,20 @@ statsParser =
         |> Parser.query
 
 
+type alias Stats =
+    { st : Int
+    , dx : Int
+    , iq : Int
+    , ht : Int
+    }
+
+
 defaultStats : Stats
 defaultStats =
     { st = 10
     , dx = 10
     , iq = 10
     , ht = 10
-    }
-
-
-type alias Stats =
-    { st : Int
-    , dx : Int
-    , iq : Int
-    , ht : Int
     }
 
 
@@ -112,9 +116,22 @@ update msg model =
             )
 
         Pull ->
-            ( { model
-                | gauge = Gauge.update (awayBy -model.strength) model.gauge
-              }
+            let
+                ( nextHeat, nextForce ) =
+                    if model.heat >= model.grace then
+                        ( 0, model.force + 1 )
+
+                    else
+                        ( model.heat + 1, model.force )
+
+                next =
+                    { model
+                        | gauge = Gauge.update (awayBy -model.strength) model.gauge
+                        , heat = nextHeat
+                        , force = nextForce
+                    }
+            in
+            ( next
             , Cmd.none
             )
 

@@ -16,7 +16,7 @@ type Gauge
 create : Int -> Int -> Gauge
 create safe maximum =
     Gauge
-        { current = 20
+        { current = 0
         , safe = toFloat safe
         , maximum = toFloat maximum
         }
