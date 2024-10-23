@@ -4,6 +4,7 @@ import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Navigation exposing (Key)
 import Control.Gauge as Gauge exposing (Gauge)
 import Html exposing (Html)
+import Time exposing (every)
 import Url exposing (Url)
 
 
@@ -21,11 +22,13 @@ main =
 
 type alias Model =
     { gauge : Gauge
+    , force : Float
     }
 
 
 type Msg
     = None
+    | Push
 
 
 init : flags -> Url -> Key -> ( Model, Cmd Msg )
@@ -34,7 +37,11 @@ init _ _ _ =
         gauge =
             Gauge.create 30 70
     in
-    ( { gauge = gauge }, Cmd.none )
+    ( { gauge = gauge
+      , force = 2
+      }
+    , Cmd.none
+    )
 
 
 view : Model -> Document Msg
@@ -50,13 +57,33 @@ view model =
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        None ->
+            ( model, Cmd.none )
+
+        Push ->
+            ( { model
+                | gauge = Gauge.update (awayBy model.force) model.gauge
+              }
+            , Cmd.none
+            )
+
+
+awayBy : Float -> Float -> Float
+awayBy force current =
+    if current >= 0 then
+        current + force
+
+    else
+        current - force
 
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Sub.batch
+        [ every 250 (always Push)
+        ]
 
 
 onUrlRequest : UrlRequest -> Msg
